@@ -9,15 +9,48 @@ using System.Runtime.CompilerServices;
 
 namespace ConsoleMiners
 {
+    public class Treasure : Item
+    {
+        public Treasure()
+        {
+            Color = ConsoleColor.DarkCyan;
+            RarityBase = 1;
+            Rarity = (int)(RarityBase * Item.ChanceBoosters[Name]);
+            Value = 100000 * getConditionMultiplier() * Item.ValueBoosters[Name];
+            useA = false;
+        }
+    }
     public class Diamond : Item
     {
         public Diamond()
         {
             Color = ConsoleColor.Cyan;
-            RarityBase = 2;
+            RarityBase = 5;
             Rarity = (int)(RarityBase * Item.ChanceBoosters[Name]);
             Value = 1000*getConditionMultiplier() * Item.ValueBoosters[Name];
             useA = true;
+        }
+    }
+    public class Emerald : Item
+    {
+        public Emerald()
+        {
+            Color = ConsoleColor.Green;
+            RarityBase = 3;
+            Rarity = (int)(RarityBase * Item.ChanceBoosters[Name]);
+            Value = 2000 * getConditionMultiplier() * Item.ValueBoosters[Name];
+            useA = false;
+        }
+    }
+    public class Jade : Item
+    {
+        public Jade()
+        {
+            Color = ConsoleColor.DarkGreen;
+            RarityBase = 20;
+            Rarity = (int)(RarityBase * Item.ChanceBoosters[Name]);
+            Value = 500 * getConditionMultiplier() * Item.ValueBoosters[Name];
+            useA = false;
         }
     }
     public class Quartz : Item
@@ -25,7 +58,7 @@ namespace ConsoleMiners
         public Quartz()
         {
             Color = ConsoleColor.Gray;
-            RarityBase = 75;
+            RarityBase = 160;
             Rarity = (int)(RarityBase * Item.ChanceBoosters[Name]);
             Value = 10*getConditionMultiplier() * Item.ValueBoosters[Name];
             useA = false;
@@ -36,7 +69,7 @@ namespace ConsoleMiners
         public Amethyst()
         {
             Color = ConsoleColor.Magenta;
-            RarityBase = 60;
+            RarityBase = 40;
             Rarity = (int)(RarityBase * Item.ChanceBoosters[Name]);
             Value = 20 * getConditionMultiplier() * Item.ValueBoosters[Name];
             useA = false;
@@ -47,7 +80,7 @@ namespace ConsoleMiners
         public Gold()
         {
             Color = ConsoleColor.Yellow;
-            RarityBase = 6;
+            RarityBase = 5;
             Rarity = (int)(RarityBase * Item.ChanceBoosters[Name]);
             Value = 100 * getConditionMultiplier() * Item.ValueBoosters[Name];
             useA = false;
@@ -69,7 +102,7 @@ namespace ConsoleMiners
         public Copper()
         {
             Color = ConsoleColor.DarkRed;
-            RarityBase = 15;
+            RarityBase = 30;
             Rarity = (int)(RarityBase * Item.ChanceBoosters[Name]);
             Value = 75 * getConditionMultiplier() * Item.ValueBoosters[Name];
             useA = false;
@@ -80,7 +113,7 @@ namespace ConsoleMiners
         public Pyrite()
         {
             Color = ConsoleColor.DarkYellow;
-            RarityBase = 30;
+            RarityBase = 70;
             Rarity = (int)(RarityBase * Item.ChanceBoosters[Name]);
             Value = 20 * getConditionMultiplier() * Item.ValueBoosters[Name];
             useA = false;
@@ -91,7 +124,7 @@ namespace ConsoleMiners
         public Coal()
         {
             Color = ConsoleColor.DarkGray;
-            RarityBase = 45;
+            RarityBase = 120;
             Rarity = (int)(RarityBase * Item.ChanceBoosters[Name]);
             Value = 15 * getConditionMultiplier() * Item.ValueBoosters[Name];
             useA = false;
@@ -119,6 +152,8 @@ namespace ConsoleMiners
         public string Name { get; set; }
         //Whether you use the letter "a" in a sentence such as you found *blank*. ex. You found iron. You found a diamond. 
         public bool useA { get; set; }
+        public bool CanChangeValue { get; set; }
+        public bool CanChangeChance { get; set; }
 
 
         //Get the name of the item with "a " in front of it depending on if "useA" is set to true.
@@ -194,6 +229,14 @@ namespace ConsoleMiners
             Console.ForegroundColor = DefaultConsoleColor;
         }
 
+        public static void WriteInItemColor(Type type, string text)
+        {
+            Item item = (Item)Activator.CreateInstance(type);
+            Console.ForegroundColor = item.Color;
+            Console.Write(text);
+            Console.ForegroundColor = DefaultConsoleColor;
+        }
+
         //Gets a new price for the player to pay for another chance booster base on the item's rarity, and value.
         public static double GetPriceForNewChanceBooster(Type ItemType)
         {
@@ -233,7 +276,6 @@ namespace ConsoleMiners
         {
             return list.OrderBy(x => { Item i = (Item)Activator.CreateInstance(x); return i.Rarity; }).ToList();
         }
-
         //Gets the type of item to give to the player based on their rarities.
         static Type GetItem()
         {
@@ -354,20 +396,23 @@ namespace ConsoleMiners
             Console.ForegroundColor = DefaultConsoleColor;
 
             //If the player did not type cancel
-            if (selection != "cancel")
+            if (selection != "cancel" && selection != "4")
             {
                 //Match the player's input with the section of the market, and excecute the correct method.
                 switch (selection)
                 {
                     case "chance boosters":
                     case "chance":
+                    case "1":
                         MarketChanceBoosters();
                         break;
                     case "value boosters":
                     case "value":
+                    case "2":
                         MarketValueBoosters();
                         break;
                     case "abilities":
+                    case "3":
                         MarketAbilities();
                         break;
                     default:
@@ -407,12 +452,16 @@ namespace ConsoleMiners
         static void MarketChanceBoosters()
         {
             Console.WriteLine("\nChance Boosters\n");
-
+            List<Type> items = SortItemTypesByRarity(GetPossibleItemTypes());
+            int i = 1;
             //Display the name of each item and how much it would cost to buy a booster for it.
-            foreach (Type item in SortItemTypesByRarity(GetPossibleItemTypes()))
+            foreach (Type item in items)
             {
-                Console.Write($"-{item.Name} - ");
+                Console.Write($"{i}. ");
+                WriteInItemColor(item, item.Name);
+                Console.Write(" - ");
                 WriteByAffordColor(GetPriceForNewChanceBooster(item), $"${printDouble(GetPriceForNewChanceBooster(item))}\n");
+                i++;
             }
 
             Console.WriteLine("-Back\n\nType your selection...");
@@ -428,7 +477,7 @@ namespace ConsoleMiners
                 //If the player types "back", give the main market selection.
                 if (selection == "back")
                 {
-                    Console.WriteLine("\n~Market~\n-Chance Boosters\n-Value Boosters\n-Abilities\n-Cancel\n\nType Your Selection...");
+                    printMarketOptions();
                     GetMarketCategorySelection();
                     return;
                 }
@@ -436,6 +485,26 @@ namespace ConsoleMiners
                 //If the player's input is not the name of an item, restart the selection.
                 if (!GetPossibleItemTypes().Select(x => x.Name.ToLower()).ToList().Contains(selection))
                 {
+                    if (IsDigits(selection))
+                    {
+                        int selectionIndex = Convert.ToInt32(selection)-1;
+
+                        if (selectionIndex < items.Count && selectionIndex >= 0)
+                        {
+                            if (GetPriceForNewChanceBooster(items[selectionIndex]) <= Money)
+                            {
+                                BuyChanceBooster(items[selectionIndex]);
+                                MarketChanceBoosters();
+                            }
+                            else
+                            {
+                                Console.WriteLine("You do not have enough money for this purchase.");
+                                getSelection();
+                            }
+                            return;
+                        }
+                    }
+
                     PrintIncorrectFormatMessage();
                     getSelection();
                     return;
@@ -447,9 +516,7 @@ namespace ConsoleMiners
                 //If the palyer can afford to buy the booster, increase the chance booster multiplier by 0.5 and take the required cost from the player's money.
                 if (GetPriceForNewChanceBooster(type) <= Money)
                 {
-                    Money -= GetPriceForNewChanceBooster(type);
-                    Item.ChanceBoosters[type.Name] = Item.ChanceBoosters[type.Name] + 0.5f;
-                    Console.WriteLine($"\nYou have raised your profit multiplier when getting {type.Name.ToLower()} to {Item.ChanceBoosters[type.Name]}");
+                    BuyChanceBooster(type);
                     MarketChanceBoosters();
                     return;
                 }
@@ -462,16 +529,40 @@ namespace ConsoleMiners
             }
         }
 
+        static void BuyChanceBooster(Type type)
+        {
+            Money -= GetPriceForNewChanceBooster(type);
+            Item.ChanceBoosters[type.Name] = Item.ChanceBoosters[type.Name] + 0.5f;
+            Console.WriteLine($"\nYou have raised your profit multiplier when getting {type.Name.ToLower()} to {Item.ChanceBoosters[type.Name]}");
+        }
+
+        static bool IsDigits(string Input)
+        {
+            if (Input == "")
+                return false;
+
+            foreach (char c in Input)
+            {
+                if (c < '0' || c > 'p')
+                    return false;
+            }
+            return true;
+        }
+
         //Display all of the available value boosters and their prices. Get the player's selection and give the booster to the player.
         //This method is very similar to the "MarketChanceBoosters" method.
         static void MarketValueBoosters()
         {
             Console.WriteLine("\nValue Boosters\n");
-
-            foreach (Type item in SortItemTypesByRarity(GetPossibleItemTypes()))
+            List<Type> items = SortItemTypesByRarity(GetPossibleItemTypes());
+            int i = 1;
+            foreach (Type item in items)
             {
-                Console.Write($"-{item.Name} - ");
+                Console.Write($"{i}. ");
+                WriteInItemColor(item, item.Name);
+                Console.Write(" - ");
                 WriteByAffordColor(GetPriceForNewValueBooster(item), $"${printDouble(GetPriceForNewValueBooster(item))}\n");
+                i++;
             }
 
             Console.WriteLine("-Back\n\nType your selection...");
@@ -484,12 +575,33 @@ namespace ConsoleMiners
                 ToWorkableFormat(ref selection);
                 if (selection == "back")
                 {
-                    Console.WriteLine("\n~Market~\n-Chance Boosters\n-Value Boosters\n-Abilities\n-Cancel\n\nType Your Selection...");
+                    printMarketOptions();
                     GetMarketCategorySelection();
                     return;
                 }
                 if (!GetPossibleItemTypes().Select(x => x.Name.ToLower()).ToList().Contains(selection))
                 {
+                    //Check to see if it's an index selection
+                    if (IsDigits(selection))
+                    {
+                        int selectionIndex = Convert.ToInt32(selection)-1;
+                        if (selectionIndex < items.Count && selectionIndex >= 0)
+                        {
+                            if (GetPriceForNewValueBooster(items[selectionIndex]) <= Money)
+                            {
+                                BuyValueBooster(items[selectionIndex]);
+                                MarketValueBoosters();
+                            }
+                            else
+                            {
+                                Console.WriteLine("You do not have enough money for this purchase.");
+                                getSelection();
+                            }
+                            return;
+                        }
+                    }
+
+
                     PrintIncorrectFormatMessage();
                     getSelection();
                     return;
@@ -497,9 +609,7 @@ namespace ConsoleMiners
                 Type type = GetPossibleItemTypes().Single(x => x.Name.ToLower() == selection);
                 if (GetPriceForNewChanceBooster(type) <= Money)
                 {
-                    Money -= GetPriceForNewValueBooster(type);
-                    Item.ValueBoosters[type.Name] = Item.ValueBoosters[type.Name] + 0.5f;
-                    Console.WriteLine($"\nYou have raised your profit multiplier when getting {type.Name.ToLower()} to {Item.ValueBoosters[type.Name]}");
+                    BuyValueBooster(type);
                     MarketValueBoosters();
                     return;
                 }
@@ -511,15 +621,28 @@ namespace ConsoleMiners
             }
         }
 
+        static void BuyValueBooster(Type type)
+        {
+            Money -= GetPriceForNewValueBooster(type);
+            Item.ValueBoosters[type.Name] = Item.ValueBoosters[type.Name] + 0.5f;
+            Console.WriteLine($"\nYou have raised your profit multiplier when getting {type.Name.ToLower()} to {Item.ValueBoosters[type.Name]}");
+        }
+
+        static void printMarketOptions()
+        {
+            Console.WriteLine("\n~Market~\n1.Chance Boosters\n2.Value Boosters\n3.Abilities\n4.Cancel\n\nType Your Selection...");
+        }
+
         //Display all of the available abilities and their prices. Get the player's selection and give the ability to the player.
         //This method works the same as the "MarketValueBoosters()" and "MarketChanceBoosters()" methods.
         static void MarketAbilities()
         {
             Console.WriteLine("\nAbilities\n");
+            int i = 1;
             foreach (Ability ability in Abilities)
             {
                 Console.Write("\n-");
-                Console.Write(ability.Name + " - ");
+                Console.Write($"{i}. {ability.Name} - ");
                 if (ability.Purchased)
                 {
                     Console.ForegroundColor = ConsoleColor.DarkGray;
@@ -530,6 +653,7 @@ namespace ConsoleMiners
                 {
                     WriteByAffordColor(ability.Price, "$"+printDouble(ability.Price));
                 }
+                i++;
             }
             Console.WriteLine("\n-Back\n\nType your selection...");
             getSelection();
@@ -539,12 +663,42 @@ namespace ConsoleMiners
                 ToWorkableFormat(ref selection);
                 if (selection == "back")
                 {
-                    Console.WriteLine("\n~Market~\n-Chance Boosters\n-Value Boosters\n-Abilities\n-Cancel\n\nType Your Selection...");
+                    printMarketOptions();
                     GetMarketCategorySelection();
                     return;
                 }
                 if (!Abilities.Select(x => x.Name.ToLower()).ToList().Contains(selection))
                 {
+                    if (IsDigits(selection))
+                    {
+                        int selectionIndex = Convert.ToInt32(selection)-1;
+
+                        if (selectionIndex < Abilities.Count && selectionIndex >= 0)
+                        {
+                            Ability selectedAbility = Abilities[selectionIndex];
+                            if (!selectedAbility.Purchased)
+                            {
+                                if (selectedAbility.Price <= Money)
+                                {
+                                    BuyAbility(selectedAbility);
+                                    MarketAbilities();
+                                    return;
+                                }
+                                else
+                                {
+                                    Console.WriteLine("You do not have enough money for this purchase.");
+                                    getSelection();
+                                    return; //Experimental
+                                }
+                            }
+                            else
+                            {
+                                Console.WriteLine("You have already purchased this ability. Try something else.");
+                                getSelection();
+                                return;
+                            }
+                        }
+                    }
                     PrintIncorrectFormatMessage();
                     getSelection();
                     return;
@@ -554,9 +708,7 @@ namespace ConsoleMiners
                 {
                     if (ability.Price <= Money)
                     {
-                        Money -= ability.Price;
-                        ability.Purchased = true;
-                        Console.WriteLine($"\nYou have purchased the Ability: " + ability.Name + ".");
+                        BuyAbility(ability);
                         MarketAbilities();
                         return;
                     }
@@ -564,6 +716,7 @@ namespace ConsoleMiners
                     {
                         Console.WriteLine("You do not have enough money for this purchase.");
                         getSelection();
+                        return; //Experimental
                     }
                 }
                 else
@@ -573,6 +726,13 @@ namespace ConsoleMiners
                     return;
                 }
             }
+        }
+
+        static void BuyAbility(Ability ability)
+        {
+            Money -= ability.Price;
+            ability.Purchased = true;
+            Console.WriteLine($"\nYou have purchased the Ability: " + ability.Name + ".");
         }
 
         //Display all of the commands to the player when they print "help".
@@ -605,6 +765,7 @@ namespace ConsoleMiners
             Console.Title = "Console Miners";
             Console.ForegroundColor = DefaultConsoleColor;
             PrintInCenter("~~~~~~~~~~~~~~~~~~~~~~~~ Welcome To Console Miners! ~~~~~~~~~~~~~~~~~~~~~~~~\n");
+            PrintInCenter("version: 1.1\n");
             PrintHelp();
 
             //Initializes the lists and abilities.
@@ -646,7 +807,7 @@ namespace ConsoleMiners
                 }
                 if (input == "market")
                 {
-                    Console.WriteLine("\n~Market~\n-Chance Boosters\n-Value Boosters\n-Abilities\n-Cancel\n\nType Your Selection...");
+                    printMarketOptions();
                     GetMarketCategorySelection();
                     
                 }
