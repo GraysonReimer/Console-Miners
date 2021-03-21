@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.IO;
 using System.Linq;
 using System.Numerics;
 using System.Reflection;
@@ -200,9 +201,9 @@ namespace ConsoleMiners
     public class Item
     {
         //The list of chance boosters that the player has obtained, containing the name of the item it's for, and the multiplier for it's chance.
-        public static Dictionary<string, float> ChanceBoosters { get; set; }
+        public static Dictionary<string, float> ChanceBoosters { get; set; } //SAVE
         //The list of value boosters that the player has obtained, containing the name of the item it's for, and the multiplier for it's value.
-        public static Dictionary<string, float> ValueBoosters { get; set; }
+        public static Dictionary<string, float> ValueBoosters { get; set; } //SAVE
         //When the name of this item is displayed it will be in this color.
         public ConsoleColor Color { get; set; }
         //The possible values for the condition of an item.
@@ -264,6 +265,7 @@ namespace ConsoleMiners
             //Give the item a random condition.
             Condition = (ConditionEnum)random.Next(0, 5);
 
+
             //Set the name variable of the item to the name of it's class to avoid unnecessary code.
             Name = GetType().Name;
         }
@@ -293,6 +295,121 @@ namespace ConsoleMiners
     }
     class Player
     {
+        static void LoadSave()
+        {
+            string file = File.ReadAllText(@"Save.txt");
+            string[] props = file.Split("\r\n").Select(x => x.Split(':')[1]).ToArray();
+            string moneyLine = props[0];
+            string invLine = props[1];
+            string chanceLine = props[2];
+            string valueLine = props[3];
+            string nothLine = props[4];
+            string abilitiesLine = props[5];
+            if (moneyLine.Length > 0)
+                Money = Convert.ToSingle(moneyLine);
+            if (chanceLine.Length > 0)
+            {
+                foreach (string booster in chanceLine.Split(','))
+                {
+                    string name = booster.Split('|')[0];
+                    string amount = booster.Split('|')[1];
+
+                    Item.ChanceBoosters[name] = Convert.ToSingle(amount);
+                }
+            }
+            if (valueLine.Length > 0)
+            {
+                foreach (string value in valueLine.Split(','))
+                {
+                    string name = value.Split('|')[0];
+                    string amount = value.Split('|')[1];
+
+                    Item.ValueBoosters[name] = Convert.ToSingle(amount);
+                }
+            }
+            if (nothLine.Length > 0)
+                NothingChance = Convert.ToInt32(nothLine);
+            if (abilitiesLine.Length > 0)
+            {
+                int i = 0;
+                foreach (string ability in abilitiesLine.Split(','))
+                {
+                    Abilities[i].Purchased = (ability == "1");
+
+                    i++;
+                }
+            }
+            if (invLine.Length > 0)
+            {
+                foreach (string item in invLine.Split(','))
+                {
+                    string name = item.Split('|')[0];
+                    string quality = item.Split('|')[1];
+
+                    Item newItem = (Item)Activator.CreateInstance(GetPossibleItemTypes().Single(x => x.Name == name));
+                    newItem.Condition = (Item.ConditionEnum)Convert.ToInt32(quality);
+                    newItem.Value = 15 * newItem.getConditionMultiplier() * Item.ValueBoosters[name];
+                    Inventory.Add(newItem);
+                }
+            }
+        }
+
+        static void ClearProgress()
+        {
+            File.WriteAllText(@"Save.txt", "money:\r\ninv:\r\nchance:\r\nvalue:\r\nnoth:\r\nabilities:");
+        }
+
+        static void SaveGame()
+        {
+            string save = "money:";
+            save += Money + "\r\ninv:";
+            int i = 0;
+            foreach (Item item in Inventory)
+            {
+                if (i != 0)
+                    save += ",";
+                save += $"{item.Name}|{(int)item.Condition}";
+                i++;
+            }
+            save += "\r\nchance:";
+            i = 0;
+            foreach (KeyValuePair<string, float> booster in Item.ChanceBoosters)
+            {
+                if (i != 0)
+                    save += ",";
+
+                save += $"{booster.Key}|{booster.Value}";
+
+                i++;
+            }
+            save += "\r\nvalue:";
+            i = 0;
+            foreach (KeyValuePair<string, float> booster in Item.ValueBoosters)
+            {
+                if (i != 0)
+                    save += ",";
+
+                save += $"{booster.Key}|{booster.Value}";
+
+                i++;
+            }
+            save += "\r\nnoth:" + NothingChance + "\r\nabilities:";
+            i = 0;
+            foreach (Ability ability in Abilities)
+            {
+                if (i != 0)
+                    save += ",";
+
+                save += ability.Purchased ? "1" : "0";
+
+                i++;
+            }
+            File.WriteAllText(@"Save.txt", save);
+        }
+
+
+
+
         public static bool IsBoosted = false;
 
         //Sets the console color to the item's "Color" variable, print's the item's name, then sets the console color back to default. Use this to display the item.
@@ -836,7 +953,7 @@ namespace ConsoleMiners
         //Display all of the commands to the player when they print "help".
         static void PrintHelp()
         {
-            Console.WriteLine("\n~Help~\nMine = m or mine\nView Inventory = inv\nSell Items = sell\nView Money = money\nView Market = market");
+            Console.WriteLine("\n~Help~\nMine = m or mine\nView Inventory = inv\nSell Items = sell\nView Money = money\nView Market = market\nSave Game = save\nReset Progress = reset");
         }
 
         //Print's the given text in the center of the screen. Used for the title
@@ -847,15 +964,15 @@ namespace ConsoleMiners
         }
 
         //The list of all items in the player's inventory.
-        static public List<Item> Inventory;
+        static public List<Item> Inventory; //SAVE
         //The money that the player has.
-        static public double Money = 0;
+        static public double Money = 0; //SAVE
         //Set's the default color that all normal text will display in.
         static public ConsoleColor DefaultConsoleColor = ConsoleColor.White;
         //3 = has a 1 in 4 chance of getting notheing when mining. 5 = no chance.
-        static public int NothingChance = 3;
+        static public int NothingChance = 3; //SAVE
         //All of the abilities the player has bought.
-        static public List<Ability> Abilities;
+        static public List<Ability> Abilities; //SAVE
 
         static void Main(string[] args)
         {
@@ -864,7 +981,7 @@ namespace ConsoleMiners
             Console.Title = "Console Miners";
             Console.ForegroundColor = DefaultConsoleColor;
             PrintInCenter("~~~~~~~~~~~~~~~~~~~~~~~~ Welcome To Console Miners! ~~~~~~~~~~~~~~~~~~~~~~~~\n");
-            PrintInCenter("version: 1.2.1\n");
+            PrintInCenter("version: 1.3\n");
             PrintHelp();
 
             //Initializes the lists and abilities.
@@ -878,6 +995,8 @@ namespace ConsoleMiners
                 Item.ChanceBoosters.Add(type.Name, 1f);
                 Item.ValueBoosters.Add(type.Name, 1f);
             }
+
+            LoadSave();
 
             //Reads any commands the player will give and call all necessary actions, until the application is exited.
             while (true)
@@ -903,11 +1022,25 @@ namespace ConsoleMiners
                 {
                     PrintHelp();
                 }
+                if (input == "reset")
+                {
+                    ClearProgress();
+                    Console.ForegroundColor = ConsoleColor.Green;
+                    Console.WriteLine("Your progress has been reset.");
+                    Console.ForegroundColor = DefaultConsoleColor;
+                }
                 if (input == "market")
                 {
                     printMarketOptions();
                     GetMarketCategorySelection();
                     
+                }
+                if (input == "save")
+                {
+                    SaveGame();
+                    Console.ForegroundColor = ConsoleColor.Green;
+                    Console.WriteLine("Game has been saved.");
+                    Console.ForegroundColor = DefaultConsoleColor;
                 }
                 if (input == "sell")
                 {
