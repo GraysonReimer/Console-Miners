@@ -14,18 +14,85 @@ namespace ConsoleMiners
         public Treasure()
         {
             Color = ConsoleColor.DarkCyan;
-            RarityBase = 1;
+            RarityBase = 10;
             Rarity = (int)(RarityBase * Item.ChanceBoosters[Name]);
             Value = 100000 * getConditionMultiplier() * Item.ValueBoosters[Name];
             useA = false;
         }
     }
+    public class Dynamite : Item
+    {
+        public override void OnMine()
+        {
+            base.OnMine();
+
+            Player.Money += Value;
+            Player.Inventory.Remove(this);
+        }
+        public Dynamite()
+        {
+            Color = ConsoleColor.DarkMagenta;
+            RarityBase = 2000;
+            Rarity = (int)(RarityBase * Item.ChanceBoosters[Name]);
+            Value = -200 * getConditionMultiplier() * Item.ValueBoosters[Name];
+            useA = false;
+        }
+    }
+    public class Boost : Item
+    {
+        public override void OnMine()
+        {
+            base.OnMine();
+
+            if (!Player.IsBoosted)
+            {
+                Player.IsBoosted = true;
+                for (int i = 0; i < 90; i++)
+                {
+                    Player.Mine();
+                }
+                Player.IsBoosted = false;
+            }
+            Player.Inventory.Remove(this);
+        }
+        public Boost()
+        {
+            Color = ConsoleColor.DarkCyan;
+            RarityBase = 80;
+            Rarity = (int)(RarityBase * Item.ChanceBoosters[Name]);
+            Value = 0 * getConditionMultiplier() * Item.ValueBoosters[Name];
+            useA = false;
+        }
+    }
+    public class Saphire : Item
+    {
+        public Saphire()
+        {
+            Color = ConsoleColor.DarkBlue;
+            RarityBase = 45;
+            Rarity = (int)(RarityBase * Item.ChanceBoosters[Name]);
+            Value = 800 * getConditionMultiplier() * Item.ValueBoosters[Name];
+            useA = false;
+        }
+    }
+    public class Amber : Item
+    {
+        public Amber()
+        {
+            Color = ConsoleColor.DarkYellow;
+            RarityBase = 700;
+            Rarity = (int)(RarityBase * Item.ChanceBoosters[Name]);
+            Value = 200 * getConditionMultiplier() * Item.ValueBoosters[Name];
+            useA = false;
+        }
+    }
+
     public class Diamond : Item
     {
         public Diamond()
         {
             Color = ConsoleColor.Cyan;
-            RarityBase = 5;
+            RarityBase = 100;
             Rarity = (int)(RarityBase * Item.ChanceBoosters[Name]);
             Value = 1000*getConditionMultiplier() * Item.ValueBoosters[Name];
             useA = true;
@@ -36,7 +103,7 @@ namespace ConsoleMiners
         public Emerald()
         {
             Color = ConsoleColor.Green;
-            RarityBase = 3;
+            RarityBase = 50;
             Rarity = (int)(RarityBase * Item.ChanceBoosters[Name]);
             Value = 2000 * getConditionMultiplier() * Item.ValueBoosters[Name];
             useA = false;
@@ -47,9 +114,9 @@ namespace ConsoleMiners
         public Jade()
         {
             Color = ConsoleColor.DarkGreen;
-            RarityBase = 20;
+            RarityBase = 200;
             Rarity = (int)(RarityBase * Item.ChanceBoosters[Name]);
-            Value = 500 * getConditionMultiplier() * Item.ValueBoosters[Name];
+            Value = 50 * getConditionMultiplier() * Item.ValueBoosters[Name];
             useA = false;
         }
     }
@@ -58,7 +125,7 @@ namespace ConsoleMiners
         public Quartz()
         {
             Color = ConsoleColor.Gray;
-            RarityBase = 160;
+            RarityBase = 4000;
             Rarity = (int)(RarityBase * Item.ChanceBoosters[Name]);
             Value = 10*getConditionMultiplier() * Item.ValueBoosters[Name];
             useA = false;
@@ -69,7 +136,7 @@ namespace ConsoleMiners
         public Amethyst()
         {
             Color = ConsoleColor.Magenta;
-            RarityBase = 40;
+            RarityBase = 1200;
             Rarity = (int)(RarityBase * Item.ChanceBoosters[Name]);
             Value = 20 * getConditionMultiplier() * Item.ValueBoosters[Name];
             useA = false;
@@ -80,7 +147,7 @@ namespace ConsoleMiners
         public Gold()
         {
             Color = ConsoleColor.Yellow;
-            RarityBase = 5;
+            RarityBase = 50;
             Rarity = (int)(RarityBase * Item.ChanceBoosters[Name]);
             Value = 100 * getConditionMultiplier() * Item.ValueBoosters[Name];
             useA = false;
@@ -91,7 +158,7 @@ namespace ConsoleMiners
         public Ruby()
         {
             Color = ConsoleColor.Red;
-            RarityBase = 6;
+            RarityBase = 100;
             Rarity = (int)(RarityBase * Item.ChanceBoosters[Name]);
             Value = 90 * getConditionMultiplier() * Item.ValueBoosters[Name];
             useA = true;
@@ -102,7 +169,7 @@ namespace ConsoleMiners
         public Copper()
         {
             Color = ConsoleColor.DarkRed;
-            RarityBase = 30;
+            RarityBase = 1400;
             Rarity = (int)(RarityBase * Item.ChanceBoosters[Name]);
             Value = 75 * getConditionMultiplier() * Item.ValueBoosters[Name];
             useA = false;
@@ -113,7 +180,7 @@ namespace ConsoleMiners
         public Pyrite()
         {
             Color = ConsoleColor.DarkYellow;
-            RarityBase = 70;
+            RarityBase = 3500;
             Rarity = (int)(RarityBase * Item.ChanceBoosters[Name]);
             Value = 20 * getConditionMultiplier() * Item.ValueBoosters[Name];
             useA = false;
@@ -124,7 +191,7 @@ namespace ConsoleMiners
         public Coal()
         {
             Color = ConsoleColor.DarkGray;
-            RarityBase = 120;
+            RarityBase = 3000;
             Rarity = (int)(RarityBase * Item.ChanceBoosters[Name]);
             Value = 15 * getConditionMultiplier() * Item.ValueBoosters[Name];
             useA = false;
@@ -155,6 +222,11 @@ namespace ConsoleMiners
         public bool CanChangeValue { get; set; }
         public bool CanChangeChance { get; set; }
 
+
+        public virtual void OnMine()
+        {
+
+        }
 
         //Get the name of the item with "a " in front of it depending on if "useA" is set to true.
         public string CorrectForm()
@@ -221,6 +293,8 @@ namespace ConsoleMiners
     }
     class Player
     {
+        public static bool IsBoosted = false;
+
         //Sets the console color to the item's "Color" variable, print's the item's name, then sets the console color back to default. Use this to display the item.
         public static void WriteInItemColor(Item item, string text)
         {
@@ -247,7 +321,7 @@ namespace ConsoleMiners
             //The current boost value of this item.
             decimal CurrentBoost = (decimal)Item.ChanceBoosters.Single(x => x.Key == ItemType.Name).Value;
             //The final price.
-            decimal result = (decimal)(initialPrice * 10) * CurrentBoost;
+            decimal result = (decimal)(initialPrice * 30) * CurrentBoost;
             return (double)result;
         }
 
@@ -262,7 +336,7 @@ namespace ConsoleMiners
             //The current boost value of this item type.
             decimal CurrentBoost = (decimal)Item.ValueBoosters.Single(x => x.Key == ItemType.Name).Value;
             //The final price
-            decimal result = (decimal)(initialPrice * 10) * CurrentBoost;
+            decimal result = (decimal)(initialPrice * 30) * CurrentBoost;
             return (double)result;
         }
 
@@ -307,7 +381,7 @@ namespace ConsoleMiners
             return potentialItems[potentialItems.Count-1].GetType();
         }
         //Calls everytime the player mines. It will either give the player a new item of find nothing. It will diplsy the results to the player.
-        static void Mine()
+        public static void Mine()
         {
             System.Random random = new System.Random();
             //If there is still a chance of getting nothing and the player has purchased the "Never get Nothing" ability is purchased, set the NothingChance to 5 so that you always find something.
@@ -319,6 +393,7 @@ namespace ConsoleMiners
             {
                 Item item = (Item)Activator.CreateInstance(GetItem());
                 Item DoubledItem = new Item();
+                Item TripledItem = new Item();
 
                 //If the "Double reward" ability is active then duplicate the object and add it to the inventory.
                 if (Abilities[0].Purchased)
@@ -327,7 +402,13 @@ namespace ConsoleMiners
                     DoubledItem.Condition = item.Condition;
                     Inventory.Add(DoubledItem);
                 }
-
+                //If the "Triple reward" ability is active then duplicate the object and add it to the inventory.
+                if (Abilities[4].Purchased)
+                {
+                    TripledItem = (Item)Activator.CreateInstance(item.GetType());
+                    TripledItem.Condition = item.Condition;
+                    Inventory.Add(TripledItem);
+                }
 
                 Inventory.Add(item);
 
@@ -335,17 +416,31 @@ namespace ConsoleMiners
                 Console.Write($"You found ");
                 WriteInItemColor(item, item.CorrectForm());
                 //If the "Double Reward" ability is active, double the item that was found.
-                if (Abilities[0].Purchased)
-                    Console.Write(" x2");
+                if (Abilities[4].Purchased)
+                    Console.Write(" x3");
+                else
+                    if (Abilities[0].Purchased)
+                        Console.Write(" x2");
                 Console.Write($". Condition: {item.Condition}, Value: ");
-                Console.ForegroundColor = ConsoleColor.Green;
+                if (item.Value >= 0)
+                    Console.ForegroundColor = ConsoleColor.Green;
+                else
+                    Console.ForegroundColor = ConsoleColor.Red;
 
                 //If the "Double Reward" ability is active, print the doubled price.
-                if (Abilities[0].Purchased)
-                    Console.Write("$" + printDouble(item.Value + DoubledItem.Value) + "\n");
+
+                if (Abilities[4].Purchased)
+                    Console.Write("$" + printDouble(item.Value + DoubledItem.Value + TripledItem.Value) + "\n");
                 else
-                    Console.Write("$" + printDouble(item.Value) + "\n");
+                {
+                    if (Abilities[0].Purchased)
+                        Console.Write("$" + printDouble(item.Value + DoubledItem.Value) + "\n"); 
+                    else
+                        Console.Write("$" + printDouble(item.Value) + "\n");
+                }
                 Console.ForegroundColor = DefaultConsoleColor;
+
+                item.OnMine();
             }
             else
             {
@@ -730,6 +825,9 @@ namespace ConsoleMiners
 
         static void BuyAbility(Ability ability)
         {
+            if (ability.Name == "Triple Reward")
+                Abilities[0].Purchased = true;
+
             Money -= ability.Price;
             ability.Purchased = true;
             Console.WriteLine($"\nYou have purchased the Ability: " + ability.Name + ".");
@@ -761,19 +859,19 @@ namespace ConsoleMiners
 
         static void Main(string[] args)
         {
+
             //Display the title and help info when the application is started.
             Console.Title = "Console Miners";
             Console.ForegroundColor = DefaultConsoleColor;
             PrintInCenter("~~~~~~~~~~~~~~~~~~~~~~~~ Welcome To Console Miners! ~~~~~~~~~~~~~~~~~~~~~~~~\n");
-            PrintInCenter("version: 1.1\n");
+            PrintInCenter("version: 1.2.1\n");
             PrintHelp();
 
             //Initializes the lists and abilities.
             Item.ChanceBoosters = new Dictionary<string, float>();
             Item.ValueBoosters = new Dictionary<string, float>();
             Inventory = new List<Item>();
-            Abilities = new List<Ability>() { new Ability("Double Reward", 25000), new Ability("Double Mining", 30000), new Ability("Eliminate Quartz and Coal", 40000), new Ability("Always Find Something", 10000)};
-            
+            Abilities = new List<Ability>() { new Ability("Double Reward", 25000), new Ability("Double Mining", 30000), new Ability("Eliminate Quartz and Coal", 40000), new Ability("Always Find Something", 10000), new Ability("Triple Reward", 300000) };
             //Set's the chance booster of all items to one by default.
             foreach (Type type in GetPossibleItemTypes())
             {
