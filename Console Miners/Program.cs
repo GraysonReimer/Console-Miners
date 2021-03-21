@@ -7,6 +7,8 @@ using System.Linq;
 using System.Numerics;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace ConsoleMiners
 {
@@ -295,9 +297,42 @@ namespace ConsoleMiners
     }
     class Player
     {
+        //Key for EncryptOrDecrypt()
+        static int key = 200;
+
+        //A very simple encryptor/decryptor to prevent editing of the save file.
+        static string EncryptOrDecrypt(string text, int key)
+        {
+            StringBuilder szInputStringBuild = new StringBuilder(text);
+            StringBuilder szOutStringBuild = new StringBuilder(text.Length);
+            char Textch;
+            for (int iCount = 0; iCount < text.Length; iCount++)
+            {
+                Textch = szInputStringBuild[iCount];
+                Textch = (char)(Textch ^ key);
+                szOutStringBuild.Append(Textch);
+            }
+            return szOutStringBuild.ToString();
+        }
+
+        //Load the Save.txt file and reads all the data
         static void LoadSave()
         {
+            //If the save file does not exist, create one.
+            //Using this as an alternative to File.Exists() as it will always return false.
+            try
+            {
+                //Try reading the file
+                File.ReadAllText(@"Save.txt");
+            }
+            catch (FileNotFoundException e)
+            {
+                //Creates the default file
+                File.WriteAllText(@"Save.txt", EncryptOrDecrypt("money:\r\ninv:\r\nchance:\r\nvalue:\r\nnoth:\r\nabilities:", key));
+                return;
+            }
             string file = File.ReadAllText(@"Save.txt");
+            file = EncryptOrDecrypt(file, key);
             string[] props = file.Split("\r\n").Select(x => x.Split(':')[1]).ToArray();
             string moneyLine = props[0];
             string invLine = props[1];
@@ -354,11 +389,16 @@ namespace ConsoleMiners
             }
         }
 
+        //Reset the Save.txt file to it's default state
         static void ClearProgress()
         {
-            File.WriteAllText(@"Save.txt", "money:\r\ninv:\r\nchance:\r\nvalue:\r\nnoth:\r\nabilities:");
+            string text = "money:\r\ninv:\r\nchance:\r\nvalue:\r\nnoth:\r\nabilities:";
+            File.WriteAllText(@"Save.txt", EncryptOrDecrypt(text, key));
+            Initialize();
         }
 
+
+        //Write all of the current data to the Save.txt file
         static void SaveGame()
         {
             string save = "money:";
@@ -404,12 +444,12 @@ namespace ConsoleMiners
 
                 i++;
             }
-            File.WriteAllText(@"Save.txt", save);
+            File.WriteAllText(@"Save.txt", EncryptOrDecrypt(save, key));
         }
 
 
 
-
+        //Used to check if the player is currently mining in a boost mode to avoid a loop.
         public static bool IsBoosted = false;
 
         //Sets the console color to the item's "Color" variable, print's the item's name, then sets the console color back to default. Use this to display the item.
@@ -420,6 +460,7 @@ namespace ConsoleMiners
             Console.ForegroundColor = DefaultConsoleColor;
         }
 
+        //A second version of the WriteInItemColor() method but it takes in a Type, rather than an item.
         public static void WriteInItemColor(Type type, string text)
         {
             Item item = (Item)Activator.CreateInstance(type);
@@ -973,17 +1014,11 @@ namespace ConsoleMiners
         static public int NothingChance = 3; //SAVE
         //All of the abilities the player has bought.
         static public List<Ability> Abilities; //SAVE
-
-        static void Main(string[] args)
+        
+        static void Initialize()
         {
-
-            //Display the title and help info when the application is started.
-            Console.Title = "Console Miners";
-            Console.ForegroundColor = DefaultConsoleColor;
-            PrintInCenter("~~~~~~~~~~~~~~~~~~~~~~~~ Welcome To Console Miners! ~~~~~~~~~~~~~~~~~~~~~~~~\n");
-            PrintInCenter("version: 1.3\n");
-            PrintHelp();
-
+            NothingChance = 3;
+            Money = 0;
             //Initializes the lists and abilities.
             Item.ChanceBoosters = new Dictionary<string, float>();
             Item.ValueBoosters = new Dictionary<string, float>();
@@ -995,6 +1030,19 @@ namespace ConsoleMiners
                 Item.ChanceBoosters.Add(type.Name, 1f);
                 Item.ValueBoosters.Add(type.Name, 1f);
             }
+        }
+
+        static void Main(string[] args)
+        {
+
+            //Display the title and help info when the application is started.
+            Console.Title = "Console Miners";
+            Console.ForegroundColor = DefaultConsoleColor;
+            PrintInCenter("~~~~~~~~~~~~~~~~~~~~~~~~ Welcome To Console Miners! ~~~~~~~~~~~~~~~~~~~~~~~~\n");
+            PrintInCenter("version: 1.3.1\n");
+            PrintHelp();
+
+            Initialize();
 
             LoadSave();
 
